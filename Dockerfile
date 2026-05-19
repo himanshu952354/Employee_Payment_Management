@@ -20,7 +20,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 RUN wget -qO mongosh.tgz https://downloads.mongodb.com/compass/mongosh-2.2.6-linux-x64.tgz \
     && tar -zxvf mongosh.tgz \
     && cp mongosh-2.2.6-linux-x64/bin/mongosh /usr/local/bin/ \
-    && cp mongosh-2.2.6-linux-x64/bin/mongocryptd-mongosh /usr/local/bin/ \
     && rm -rf mongosh.tgz mongosh-2.2.6-linux-x64
 
 # Clear cache
