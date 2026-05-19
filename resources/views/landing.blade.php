@@ -177,8 +177,24 @@
                         class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider bg-black hover:bg-neutral-800 text-white py-2.5 px-4 sm:px-5 rounded-none border border-black transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
                         Start Free
                     </button>
+                    
+                    <!-- Mobile Menu Toggle Button -->
+                    <button id="mobileMenuBtn" class="lg:hidden ml-1 p-2 w-10 h-10 flex items-center justify-center border border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
+                        <i class="fa-solid fa-bars text-black"></i>
+                    </button>
                 </div>
             </div>
+        </div>
+
+        <!-- Mobile Navigation Menu (Hidden by default) -->
+        <div id="mobileMenu" class="hidden lg:hidden w-full border-t border-black bg-[#F4ECE6] absolute top-full left-0 z-40 shadow-[0px_10px_0px_0px_rgba(0,0,0,1)]">
+            <nav class="flex flex-col p-6 gap-6 text-xs font-black uppercase tracking-wider text-black">
+                <a href="#features" class="mobile-nav-link hover:underline underline-offset-4 decoration-2">Features</a>
+                <a href="#demo" class="mobile-nav-link hover:underline underline-offset-4 decoration-2">Dashboard Demo</a>
+                <a href="#pricing" class="mobile-nav-link hover:underline underline-offset-4 decoration-2">Pricing</a>
+                <a href="#faq" class="mobile-nav-link hover:underline underline-offset-4 decoration-2">FAQ</a>
+                <a href="#contact" class="mobile-nav-link hover:underline underline-offset-4 decoration-2">Contact Us</a>
+            </nav>
         </div>
     </header>
 
@@ -1043,6 +1059,23 @@
 
         // Global Alert Auto-Dismiss & Dynamic Open
         document.addEventListener('DOMContentLoaded', () => {
+            // Mobile Menu Toggle
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu.classList.add('hidden');
+                    });
+                });
+            }
+
             // Initialize Lenis Kinetic Smooth Scrolling
             if (typeof Lenis !== 'undefined') {
                 const lenis = new Lenis({
