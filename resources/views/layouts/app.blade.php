@@ -192,7 +192,7 @@
 <body class="h-full text-black flex overflow-hidden bg-[#F4ECE6] antialiased">
 
     <!-- 1. Left Sidebar Navigation -->
-    <aside class="hidden lg:flex lg:flex-col lg:w-72 lg:flex-shrink-0 bg-[#F4ECE6] border-r border-black z-20 relative">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 bg-[#F4ECE6] border-r border-black flex flex-col flex-shrink-0">
         <!-- Logo block -->
         <div class="h-20 flex items-center gap-2.5 px-6 border-b border-black select-none">
             <span class="text-2xl font-black tracking-tight text-black">PayFlow</span>
@@ -318,13 +318,16 @@
         </div>
     </aside>
 
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity cursor-pointer"></div>
+
     <!-- 2. Main Content Area Container -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
 
         <!-- Header / Top Bar -->
         <header class="h-20 flex items-center justify-between px-6 bg-[#F4ECE6] border-b border-black">
             <!-- Mobile Menu Toggle Button -->
-            <button
+            <button id="sidebar-toggle-btn"
                 class="lg:hidden p-2 text-black hover:bg-black/5 border border-transparent rounded-none transition-colors duration-150">
                 <i class="fa-solid fa-bars text-xl"></i>
             </button>
@@ -892,8 +895,41 @@
 
                     const notifDropdown = document.getElementById('notifications-dropdown');
                     if (notifDropdown) notifDropdown.classList.add('hidden');
+                    
+                    const sidebar = document.getElementById('sidebar');
+                    const sidebarOverlay = document.getElementById('sidebar-overlay');
+                    if (sidebar && !sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+                        sidebar.classList.add('-translate-x-full');
+                        if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+                    }
                 }
             });
+
+            // Mobile Sidebar Toggle Logic
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            if (sidebarToggleBtn && sidebar && sidebarOverlay) {
+                function toggleSidebar() {
+                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarOverlay.classList.toggle('hidden');
+                }
+
+                sidebarToggleBtn.addEventListener('click', toggleSidebar);
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+                
+                // Close sidebar when clicking a link (useful on mobile)
+                const sidebarLinks = sidebar.querySelectorAll('a');
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (window.innerWidth < 1024) {
+                            sidebar.classList.add('-translate-x-full');
+                            sidebarOverlay.classList.add('hidden');
+                        }
+                    });
+                });
+            }
         });
     </script>
     @yield('scripts')
