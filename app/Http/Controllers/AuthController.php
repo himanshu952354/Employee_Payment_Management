@@ -259,7 +259,9 @@ class AuthController extends Controller
                 $user->password = $mongoUser['password'];
                 $user->role = $mongoUser['role'] ?? 'employee';
                 $user->company_name = $mongoUser['company_name'] ?? null;
-                $user->employee_id = $mongoUser['employee_id'] ?? null;
+                // DO NOT sync employee_id because SQLite resets wipe the foreign key targets, causing constraint crashes!
+                // DashboardController now accurately fetches the employee by email address instead.
+                $user->employee_id = null;
                 $user->departments = $mongoUser['departments'] ?? null;
                 $user->currency = $mongoUser['currency'] ?? '$';
                 $user->save();
