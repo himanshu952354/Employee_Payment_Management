@@ -17,9 +17,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
 # Install mongosh for custom MongoDB service execution
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/mongo.gpg \
-    && echo "deb http://repo.mongodb.org/apt/debian bookworm/mongodb-org/7.0 main" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list \
-    && apt-get update && apt-get install -y mongodb-mongosh
+RUN wget -qO mongosh.tgz https://downloads.mongodb.com/compass/mongosh-2.2.6-linux-x64.tgz \
+    && tar -zxvf mongosh.tgz \
+    && cp mongosh-2.2.6-linux-x64/bin/mongosh /usr/local/bin/ \
+    && cp mongosh-2.2.6-linux-x64/bin/mongocryptd-mongosh /usr/local/bin/ \
+    && rm -rf mongosh.tgz mongosh-2.2.6-linux-x64
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
