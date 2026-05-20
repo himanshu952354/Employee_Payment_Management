@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use App\Services\MongoDBService;
 
 class AuthController extends Controller
 {
@@ -49,35 +48,20 @@ class AuthController extends Controller
         $email = $request->input('email');
         $password = $request->input('password');
 
-        // 1. Sync / fetch from MongoDB
-        $mongoService = new MongoDBService();
-        $mongoUsers = $mongoService->selectCollection('users');
-        $mongoUser = $mongoUsers->findOne(['email' => $email]);
+        // Verify role and credentials in SQLite directly
+        $user = User::where('email', $email)->first();
 
-        if (!$mongoUser) {
-            // Check if user is in SQLite to auto-migrate to MongoDB (e.g. seeded admin)
-            $sqliteUser = User::where('email', $email)->first();
-            if ($sqliteUser) {
-                $this->syncUserToMongoDB($sqliteUser);
-                $mongoUser = $mongoUsers->findOne(['email' => $email]);
-            }
-        }
-
-        // 2. If user exists in MongoDB, verify role and credentials
-        if ($mongoUser) {
-            if (($mongoUser['role'] ?? '') !== $role) {
+        if ($user) {
+            if ($user->role !== $role) {
                 $roleLabel = $role === 'admin' ? 'Admin (Boss)' : 'Employee';
                 return back()->withErrors([
                     'email' => "This email is not registered as an {$roleLabel}.",
                 ])->onlyInput('email');
             }
 
-            // Verify password against MongoDB hashed password
-            if (Hash::check($password, $mongoUser['password'])) {
-                // Ensure local SQLite copy exists and matches
-                $localUser = $this->syncUserFromMongoDB($email);
-                
-                if ($localUser && Auth::loginUsingId($localUser->id, $request->has('remember'))) {
+            // Verify password against SQLite hashed password
+            if (Hash::check($password, $user->password)) {
+                if (Auth::loginUsingId($user->id, $request->has('remember'))) {
                     $request->session()->regenerate();
                     
                     $successMsg = Auth::user()->role === 'admin'
@@ -117,17 +101,6 @@ class AuthController extends Controller
         }
 
         $request->validate($rules);
-
-        // Check if email already exists in MongoDB
-        $mongoService = new MongoDBService();
-        $mongoUsers = $mongoService->selectCollection('users');
-        $mongoUser = $mongoUsers->findOne(['email' => $request->input('email')]);
-
-        if ($mongoUser) {
-            return back()->withErrors([
-                'email' => 'The email has already been taken in MongoDB records.',
-            ])->onlyInput('email');
-        }
 
         // 2. Process based on role
         if ($role === 'admin') {
@@ -175,10 +148,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // 3. Sync to MongoDB
-        $this->syncUserToMongoDB($user);
-
-        // 4. Log user in directly
+        // 3. Log user in directly
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -188,8 +158,6 @@ class AuthController extends Controller
 
         return redirect()->route('dashboard')->with('success', $welcomeMsg);
     }
-
-
 
     /**
      * Log the user out.
@@ -201,76 +169,5 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('landing')->with('success', 'Workspace session ended successfully.');
-    }
-
-    /**
-     * Sync user details TO MongoDB users collection.
-     */
-    protected function syncUserToMongoDB(User $user)
-    {
-        try {
-            $mongoService = new MongoDBService();
-            $mongoUsers = $mongoService->selectCollection('users');
-            
-            $existing = $mongoUsers->findOne(['email' => $user->email]);
-            
-            $data = [
-                'name' => $user->name,
-                'email' => $user->email,
-                'password' => $user->password,
-                'role' => $user->role,
-                'company_name' => $user->company_name,
-                'employee_id' => $user->employee_id,
-                'departments' => $user->departments,
-                'currency' => $user->currency ?? '$',
-                'updated_at' => now()->toIso8601String(),
-            ];
-            
-            if ($existing) {
-                $mongoUsers->updateOne(['email' => $user->email], ['$set' => $data]);
-            } else {
-                $data['created_at'] = now()->toIso8601String();
-                $mongoUsers->insertOne($data);
-            }
-        } catch (\Exception $e) {
-            \Log::error('MongoDB User Sync Failed: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Fetch user from MongoDB and sync to SQLite database local copy.
-     */
-    protected function syncUserFromMongoDB(string $email): ?User
-    {
-        try {
-            $mongoService = new MongoDBService();
-            $mongoUsers = $mongoService->selectCollection('users');
-            
-            $mongoUser = $mongoUsers->findOne(['email' => $email]);
-            if ($mongoUser) {
-                // Find or create in SQLite
-                $user = User::where('email', $email)->first();
-                if (!$user) {
-                    $user = new User();
-                }
-                
-                $user->name = $mongoUser['name'] ?? 'User';
-                $user->email = $mongoUser['email'];
-                $user->password = $mongoUser['password'];
-                $user->role = $mongoUser['role'] ?? 'employee';
-                $user->company_name = $mongoUser['company_name'] ?? null;
-                // DO NOT sync employee_id because SQLite resets wipe the foreign key targets, causing constraint crashes!
-                // DashboardController now accurately fetches the employee by email address instead.
-                $user->employee_id = null;
-                $user->departments = $mongoUser['departments'] ?? null;
-                $user->currency = $mongoUser['currency'] ?? '$';
-                $user->save();
-                
-                return $user;
-            }
-        } catch (\Exception $e) {
-            \Log::error('MongoDB User Fetch Failed: ' . $e->getMessage());
-        }
-        return null;
     }
 }

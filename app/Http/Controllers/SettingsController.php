@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Employee;
-use App\Services\MongoDBService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -123,19 +122,6 @@ class SettingsController extends Controller
                 cache()->forget("company_currency_{$newCompany}");
             }
 
-            // 3. Sync to MongoDB users collection
-            $this->syncUserToMongoDB($user);
-
-            // Sync other employee users to MongoDB if company name changed
-            if ($oldCompany !== $newCompany) {
-                $siblingUsers = User::where('company_name', $newCompany)
-                    ->where('id', '!=', $user->id)
-                    ->get();
-                foreach ($siblingUsers as $sibling) {
-                    $this->syncUserToMongoDB($sibling);
-                }
-            }
-
             return redirect()->route('settings.index')->with('success', 'Workspace configuration updated successfully!');
 
         } else {
@@ -161,44 +147,7 @@ class SettingsController extends Controller
                 }
             }
 
-            // 3. Sync to MongoDB
-            $this->syncUserToMongoDB($user);
-
             return redirect()->route('settings.index')->with('success', 'Account credentials updated successfully!');
-        }
-    }
-
-    /**
-     * Helper: Sync user details to MongoDB users collection.
-     */
-    protected function syncUserToMongoDB(User $user)
-    {
-        try {
-            $mongoService = new MongoDBService();
-            $mongoUsers = $mongoService->selectCollection('users');
-            
-            $existing = $mongoUsers->findOne(['email' => $user->email]);
-            
-            $data = [
-                'name' => $user->name,
-                'email' => $user->email,
-                'password' => $user->password,
-                'role' => $user->role,
-                'company_name' => $user->company_name,
-                'employee_id' => $user->employee_id,
-                'departments' => $user->departments,
-                'currency' => $user->currency ?? '$',
-                'updated_at' => now()->toIso8601String(),
-            ];
-            
-            if ($existing) {
-                $mongoUsers->updateOne(['email' => $user->email], ['$set' => $data]);
-            } else {
-                $data['created_at'] = now()->toIso8601String();
-                $mongoUsers->insertOne($data);
-            }
-        } catch (\Exception $e) {
-            \Log::error('Settings MongoDB Sync Failed: ' . $e->getMessage());
         }
     }
 }
