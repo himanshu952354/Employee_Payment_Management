@@ -125,6 +125,7 @@ class DatabaseSeeder extends Seeder
 
         $employees = [];
         foreach ($employeesData as $data) {
+            $data['company_name'] = 'PayFlow Enterprise';
             $employee = Employee::create($data);
             $employees[] = $employee;
 
@@ -134,6 +135,7 @@ class DatabaseSeeder extends Seeder
                 'email' => $employee->email,
                 'password' => Hash::make('password'),
                 'role' => 'employee',
+                'company_name' => 'PayFlow Enterprise',
                 'employee_id' => $employee->id,
             ]);
         }

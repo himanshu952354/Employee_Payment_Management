@@ -116,8 +116,10 @@ class SettingsController extends Controller
                 // Update all employee dossier records
                 Employee::where('company_name', $oldCompany)
                     ->update(['company_name' => $newCompany]);
-                
-                // Reset dynamic currency caches
+            }
+
+            // Reset dynamic currency caches on any company or currency updates
+            if ($oldCompany !== $newCompany || $oldCurrency !== $newCurrency) {
                 cache()->forget("company_currency_{$oldCompany}");
                 cache()->forget("company_currency_{$newCompany}");
             }

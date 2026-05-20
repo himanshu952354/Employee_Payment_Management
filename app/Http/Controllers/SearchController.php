@@ -158,25 +158,12 @@ class SearchController extends Controller
 
         // Format salary slips list
         $formattedPayrolls = $payrolls->map(function($pay) use ($currentUser) {
-            // Resolve correct currency token
-            $currency = '$';
-            if ($currentUser->role === 'admin') {
-                $currency = $currentUser->currency ?? '$';
-            } else {
-                $adminUser = User::where('company_name', $currentUser->company_name)
-                    ->where('role', 'admin')
-                    ->first();
-                if ($adminUser) {
-                    $currency = $adminUser->currency ?? '$';
-                }
-            }
-
             return [
                 'id' => $pay->id,
                 'employee_name' => $pay->employee->name ?? 'N/A',
                 'month' => $pay->month,
                 'net_salary' => number_format($pay->net_salary, 2),
-                'currency' => $currency,
+                'currency' => $currentUser->currency_symbol,
                 'status' => ucfirst($pay->status),
                 'url' => route('payroll.slip', $pay->id)
             ];
