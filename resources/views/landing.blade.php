@@ -733,7 +733,7 @@
 
     <div id="auth-modal" onclick="if(event.target === this) closeAuthModal()"
         class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-        <div class="bg-white border-2 border-black rounded-none shadow-[8px_8px_0px_0px_#000] max-w-md w-full relative z-10 overflow-hidden transform scale-95 transition-transform duration-200"
+        <div class="bg-white border-2 border-black rounded-none shadow-[8px_8px_0px_0px_#000] max-w-md w-full relative z-10 overflow-hidden transform scale-95 transition-transform duration-200 max-h-[90vh] md:max-h-[95vh] flex flex-col"
             id="auth-modal-card">
 
             <!-- Modal Title/Header Bar -->
@@ -765,7 +765,7 @@
                 </button>
             </div>
 
-            <div class="p-6">
+            <div class="p-4 md:p-6 overflow-y-auto flex-1">
                 <!-- 2. Dual-Role Selector Switches -->
                 <div class="mb-6">
                     <label class="block text-[9px] font-black uppercase tracking-wider text-slate-550 mb-2">Access
