@@ -41,6 +41,11 @@ class SettingsController extends Controller
                 'departments' => ['required', 'string'],
                 'currency' => ['required', 'string', 'max:10'],
                 'password' => ['nullable', 'string', 'min:6', 'confirmed'],
+                'stripe_key' => ['nullable', 'string', 'max:255'],
+                'stripe_secret' => ['nullable', 'string', 'max:255'],
+                'paypal_client_id' => ['nullable', 'string', 'max:255'],
+                'paypal_client_secret' => ['nullable', 'string', 'max:255'],
+                'paypal_mode' => ['nullable', 'in:sandbox,live'],
             ]);
 
             $oldCompany = $user->company_name;
@@ -101,6 +106,13 @@ class SettingsController extends Controller
             $user->company_name = $newCompany;
             $user->currency = $newCurrency;
             $user->departments = array_values($deptsArray);
+            
+            // Save Stripe & PayPal details
+            $user->stripe_key = $request->input('stripe_key');
+            $user->stripe_secret = $request->input('stripe_secret');
+            $user->paypal_client_id = $request->input('paypal_client_id');
+            $user->paypal_client_secret = $request->input('paypal_client_secret');
+            $user->paypal_mode = $request->input('paypal_mode', 'sandbox');
 
             if ($request->filled('password')) {
                 $user->password = $request->input('password');

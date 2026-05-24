@@ -150,7 +150,7 @@ class PayrollController extends Controller
 
         // 1. Process Stripe API Gateway if configured
         if ($request->payment_method === 'Stripe') {
-            $secretKey = env('STRIPE_SECRET');
+            $secretKey = auth()->user()->stripe_secret ?? env('STRIPE_SECRET');
             if ($secretKey && $secretKey !== 'sk_test_placeholder') {
                 try {
                     $response = Http::withoutVerifying()
@@ -184,9 +184,9 @@ class PayrollController extends Controller
 
         // 2. Process PayPal REST Payouts API if configured
         if ($request->payment_method === 'PayPal') {
-            $paypalId = env('PAYPAL_CLIENT_ID');
-            $paypalSecret = env('PAYPAL_CLIENT_SECRET');
-            $mode = env('PAYPAL_MODE', 'sandbox');
+            $paypalId = auth()->user()->paypal_client_id ?? env('PAYPAL_CLIENT_ID');
+            $paypalSecret = auth()->user()->paypal_client_secret ?? env('PAYPAL_CLIENT_SECRET');
+            $mode = auth()->user()->paypal_mode ?? env('PAYPAL_MODE', 'sandbox');
             
             if ($paypalId && $paypalId !== 'client_id_placeholder' && $paypalSecret && $paypalSecret !== 'client_secret_placeholder') {
                 try {

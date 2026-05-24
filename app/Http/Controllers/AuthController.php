@@ -19,7 +19,8 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
-        return view('landing');
+        $companies = User::where('role', 'admin')->distinct()->pluck('company_name');
+        return view('landing', compact('companies'));
     }
 
     /**
@@ -38,38 +39,71 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $request->validate([
+        $role = $request->input('role');
+
+        $rules = [
             'email' => ['required', 'email'],
             'password' => ['required'],
             'role' => ['required', 'in:admin,employee'],
-        ]);
+        ];
 
-        $role = $request->input('role');
+        if ($role === 'employee') {
+            $rules['company_name'] = ['required', 'string'];
+        }
+
+        $request->validate($rules);
+
         $email = $request->input('email');
         $password = $request->input('password');
 
-        // Verify role and credentials in SQLite directly
-        $user = User::where('email', $email)->first();
+        if ($role === 'admin') {
+            // Verify role and credentials in SQLite directly
+            $user = User::where('email', $email)
+                ->where('role', 'admin')
+                ->first();
 
-        if ($user) {
-            if ($user->role !== $role) {
-                $roleLabel = $role === 'admin' ? 'Admin (Boss)' : 'Employee';
+            if (!$user) {
                 return back()->withErrors([
-                    'email' => "This email is not registered as an {$roleLabel}.",
+                    'email' => "This email is not registered as an Admin.",
+                ])->onlyInput('email');
+            }
+        } else {
+            $companyName = $request->input('company_name');
+
+            // 1. Strict Tenant validation in employee directory
+            $employeeExists = Employee::where('email', $email)
+                ->where('company_name', $companyName)
+                ->exists();
+
+            if (!$employeeExists) {
+                return back()->withErrors([
+                    'email' => "You are not registered in this company.",
                 ])->onlyInput('email');
             }
 
-            // Verify password against SQLite hashed password
-            if (Hash::check($password, $user->password)) {
-                if (Auth::loginUsingId($user->id, $request->has('remember'))) {
-                    $request->session()->regenerate();
+            // 2. Retrieve corresponding User credentials
+            $user = User::where('email', $email)
+                ->where('role', 'employee')
+                ->where('company_name', $companyName)
+                ->first();
+
+            if (!$user) {
+                return back()->withErrors([
+                    'email' => "Employee credentials not found. Please contact your administrator.",
+                ])->onlyInput('email');
+            }
+        }
+
+        // Verify password against SQLite hashed password
+        if (Hash::check($password, $user->password)) {
+            if (Auth::loginUsingId($user->id, $request->has('remember'))) {
+                $request->session()->regenerate();
+                
+                $successMsg = Auth::user()->role === 'admin'
+                    ? "Welcome back to your workspace command center, Admin!"
+                    : "Welcome to your personal self-service portal, " . Auth::user()->name . "!";
                     
-                    $successMsg = Auth::user()->role === 'admin'
-                        ? "Welcome back to your workspace command center, Admin!"
-                        : "Welcome to your personal self-service portal, " . Auth::user()->name . "!";
-                        
-                    return redirect()->route('dashboard')->with('success', $successMsg);
-                }
+                return redirect()->route('dashboard')->with('success', $successMsg);
             }
         }
 
@@ -79,82 +113,49 @@ class AuthController extends Controller
     }
 
     /**
-     * Handle registration of a new user account (Admin or Employee).
+     * Handle registration of a new user account (Admin only).
      */
     public function signup(Request $request)
     {
         $role = $request->input('role');
 
+        if ($role !== 'admin') {
+            return back()->withErrors([
+                'role' => 'Employee registration is disabled. Please contact your company administrator.',
+            ]);
+        }
+
         // 1. Basic validation rules
         $rules = [
-            'role' => ['required', 'in:admin,employee'],
+            'role' => ['required', 'in:admin'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:6'],
+            'company_name' => ['required', 'string', 'max:255'],
+            'departments' => ['required', 'string'],
+            'currency' => ['required', 'string', 'max:10'],
         ];
-
-        // Admin requires company name, employee doesn't
-        if ($role === 'admin') {
-            $rules['company_name'] = ['required', 'string', 'max:255'];
-            $rules['departments'] = ['required', 'string'];
-            $rules['currency'] = ['required', 'string', 'max:10'];
-        }
 
         $request->validate($rules);
 
-        // 2. Process based on role
-        if ($role === 'admin') {
-            $deptsString = $request->input('departments');
-            $deptsArray = array_filter(array_map('trim', explode(',', $deptsString)));
+        $deptsString = $request->input('departments');
+        $deptsArray = array_filter(array_map('trim', explode(',', $deptsString)));
 
-            $user = User::create([
-                'name' => $request->input('name'),
-                'email' => $request->input('email'),
-                'password' => $request->input('password'),
-                'role' => 'admin',
-                'company_name' => $request->input('company_name'),
-                'departments' => array_values($deptsArray),
-                'currency' => $request->input('currency', '$'),
-            ]);
-        } else {
-            // Check if employee email already exists in directory to link profiles
-            $employee = Employee::where('email', $request->input('email'))->first();
-
-            if (!$employee) {
-                // Generate a mock profile so employee can immediately test their personal dashboard stubs
-                $employee = Employee::create([
-                    'employee_id' => 'EMP-' . rand(1008, 9999),
-                    'name' => $request->input('name'),
-                    'email' => $request->input('email'),
-                    'phone' => '+91 99999 00000',
-                    'department' => 'Engineering',
-                    'designation' => 'Software Engineer',
-                    'salary' => 5000.00,
-                    'bank_name' => 'State Bank of India',
-                    'account_number' => 'ACC' . rand(1000000000, 9999999999),
-                    'join_date' => now()->toDateString(),
-                    'status' => 'Active',
-                    'company_name' => 'PayFlow Enterprise',
-                ]);
-            }
-
-            $user = User::create([
-                'name' => $request->input('name'),
-                'email' => $request->input('email'),
-                'password' => $request->input('password'),
-                'role' => 'employee',
-                'company_name' => $employee->company_name,
-                'employee_id' => $employee->id,
-            ]);
-        }
+        $user = User::create([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'password' => $request->input('password'),
+            'role' => 'admin',
+            'company_name' => $request->input('company_name'),
+            'departments' => array_values($deptsArray),
+            'currency' => $request->input('currency', '$'),
+        ]);
 
         // 3. Log user in directly
         Auth::login($user);
         $request->session()->regenerate();
 
-        $welcomeMsg = $user->role === 'admin'
-            ? "Welcome to PayFlow! Your workspace '{$user->company_name}' is set up."
-            : "Welcome to PayFlow! Your personal self-service portal is set up.";
+        $welcomeMsg = "Welcome to PayFlow! Your workspace '{$user->company_name}' is set up.";
 
         return redirect()->route('dashboard')->with('success', $welcomeMsg);
     }

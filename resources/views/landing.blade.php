@@ -767,7 +767,7 @@
 
             <div class="p-4 md:p-6 overflow-y-auto flex-1">
                 <!-- 2. Dual-Role Selector Switches -->
-                <div class="mb-6">
+                <div class="mb-6" id="role-selector-section">
                     <label class="block text-[9px] font-black uppercase tracking-wider text-slate-550 mb-2">Access
                         Authority Role</label>
                     <div class="grid grid-cols-2 bg-[#F4ECE6] p-1 rounded-none border border-black shadow-sm">
@@ -793,6 +793,19 @@
                         <input type="email" name="email" required
                             class="block w-full rounded-none border border-black bg-[#F4ECE6] py-3 px-3.5 text-black focus:ring-0 focus:border-black text-xs font-bold transition-all placeholder-slate-400"
                             placeholder="e.g. boss@company.com">
+                    </div>
+
+                    <!-- Company Name input (Shown dynamically only for Employee role) -->
+                    <div id="login-company-field" class="hidden">
+                        <label class="block text-[9px] font-black uppercase tracking-wider text-slate-550 mb-1.5">Company Name</label>
+                        <input type="text" name="company_name" id="login_company_name" list="companies-list" disabled
+                            class="block w-full rounded-none border border-black bg-[#F4ECE6] py-3 px-3.5 text-black focus:ring-0 focus:border-black text-xs font-bold transition-all placeholder-slate-400"
+                            placeholder="Search or enter company name">
+                        <datalist id="companies-list">
+                            @foreach($companies as $company)
+                                <option value="{{ $company }}"></option>
+                            @endforeach
+                        </datalist>
                     </div>
 
                     <div>
@@ -963,18 +976,29 @@
             const signupForm = document.getElementById('signup-form');
             const loginBtn = document.getElementById('tab-login-btn');
             const signupBtn = document.getElementById('tab-signup-btn');
+            const roleSelectorSection = document.getElementById('role-selector-section');
 
             if (tab === 'login') {
                 loginForm.classList.remove('hidden');
                 signupForm.classList.add('hidden');
+                if (roleSelectorSection) roleSelectorSection.classList.remove('hidden');
 
                 loginBtn.classList.add('border-black', 'text-black');
                 loginBtn.classList.remove('border-transparent', 'text-slate-500');
                 signupBtn.classList.add('border-transparent', 'text-slate-500');
                 signupBtn.classList.remove('border-black', 'text-black');
+                
+                // Restore whichever role was selected in login
+                switchRole(activeRole);
             } else {
                 loginForm.classList.add('hidden');
                 signupForm.classList.remove('hidden');
+                
+                // Hide role selection when registering (Admins only)
+                if (roleSelectorSection) roleSelectorSection.classList.add('hidden');
+                
+                // Force role to admin for signup
+                switchRole('admin');
 
                 signupBtn.classList.add('border-black', 'text-black');
                 signupBtn.classList.remove('border-transparent', 'text-slate-500');
@@ -984,7 +1008,9 @@
         }
 
         function switchRole(role) {
-            activeRole = role;
+            if (activeTab === 'login') {
+                activeRole = role;
+            }
 
             // Sync hidden inputs for forms submission
             const loginRoleInput = document.getElementById('login-role-input');
@@ -1002,9 +1028,12 @@
             const companyCurrencyInput = document.getElementById('company_currency_input');
             const signupTip = document.getElementById('signup-tip');
 
+            const loginCompanyField = document.getElementById('login-company-field');
+            const loginCompanyInput = document.getElementById('login_company_name');
+
             if (role === 'admin') {
-                adminBtn.className = "py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider text-white bg-black border border-black transition-all text-center shadow-sm";
-                employeeBtn.className = "py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider text-slate-550 hover:text-black transition-all text-center";
+                if (adminBtn) adminBtn.className = "py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider text-white bg-black border border-black transition-all text-center shadow-sm";
+                if (employeeBtn) employeeBtn.className = "py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider text-slate-550 hover:text-black transition-all text-center";
 
                 if (companyNameField) companyNameField.classList.remove('hidden');
                 if (companyNameInput) {
@@ -1024,13 +1053,22 @@
                     companyCurrencyInput.disabled = false;
                 }
 
-                signupTip.innerHTML = `
-                    <i class="fa-solid fa-shield-halved mt-0.5 text-black font-bold"></i>
-                    <span>Registering as Admin (Boss) automatically provisions a brand new company payment workspace instantly.</span>
-                `;
+                if (signupTip) {
+                    signupTip.innerHTML = `
+                        <i class="fa-solid fa-shield-halved mt-0.5 text-black font-bold"></i>
+                        <span>Registering as Admin (Boss) automatically provisions a brand new company payment workspace instantly. Employees must be added by their company administrator.</span>
+                    `;
+                }
+
+                // Hide login company input
+                if (loginCompanyField) loginCompanyField.classList.add('hidden');
+                if (loginCompanyInput) {
+                    loginCompanyInput.required = false;
+                    loginCompanyInput.disabled = true;
+                }
             } else {
-                employeeBtn.className = "py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider text-white bg-black border border-black transition-all text-center shadow-sm";
-                adminBtn.className = "py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider text-slate-550 hover:text-black transition-all text-center";
+                if (employeeBtn) employeeBtn.className = "py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider text-white bg-black border border-black transition-all text-center shadow-sm";
+                if (adminBtn) adminBtn.className = "py-2.5 rounded-none text-[10px] font-bold uppercase tracking-wider text-slate-550 hover:text-black transition-all text-center";
 
                 if (companyNameField) companyNameField.classList.add('hidden');
                 if (companyNameInput) {
@@ -1050,10 +1088,12 @@
                     companyCurrencyInput.disabled = true;
                 }
 
-                signupTip.innerHTML = `
-                    <i class="fa-solid fa-circle-info mt-0.5 text-black font-bold"></i>
-                    <span>Registering as Employee automatically creates your profile in the directory and binds your self-service stubs.</span>
-                `;
+                // Show login company input
+                if (loginCompanyField) loginCompanyField.classList.remove('hidden');
+                if (loginCompanyInput) {
+                    loginCompanyInput.required = true;
+                    loginCompanyInput.disabled = false;
+                }
             }
         }
 

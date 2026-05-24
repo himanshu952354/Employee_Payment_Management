@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\Payroll;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
@@ -55,7 +56,7 @@ class EmployeeController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email',
+            'email' => 'required|email|unique:employees,email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'department' => 'required|string',
             'designation' => 'required|string',
@@ -74,7 +75,7 @@ class EmployeeController extends Controller
             $employeeId = 'EMP-1001';
         }
 
-        Employee::create(array_merge(
+        $employee = Employee::create(array_merge(
             $request->all(),
             [
                 'employee_id' => $employeeId,
@@ -83,7 +84,17 @@ class EmployeeController extends Controller
             ]
         ));
 
-        return redirect()->route('employees.index')->with('success', 'Employee registered successfully with ID: ' . $employeeId);
+        // Auto-provision User login credentials for the employee
+        User::create([
+            'name' => $employee->name,
+            'email' => $employee->email,
+            'password' => 'password', // Default plain password, auto-hashed by model cast!
+            'role' => 'employee',
+            'company_name' => $employee->company_name,
+            'employee_id' => $employee->id,
+        ]);
+
+        return redirect()->route('employees.index')->with('success', 'Employee registered successfully with ID: ' . $employeeId . ' and secure User credentials provisioned.');
     }
 
     /**
@@ -124,9 +135,11 @@ class EmployeeController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
+        $userId = User::where('employee_id', $employee->id)->value('id');
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,' . $employee->id,
+            'email' => 'required|email|unique:employees,email,' . $employee->id . '|unique:users,email,' . ($userId ?? 'NULL'),
             'phone' => 'nullable|string|max:20',
             'department' => 'required|string',
             'designation' => 'required|string',
@@ -139,7 +152,13 @@ class EmployeeController extends Controller
 
         $employee->update($request->all());
 
-        return redirect()->route('employees.show', $employee->id)->with('success', 'Employee details updated successfully.');
+        // Synchronize linked User account details
+        User::where('employee_id', $employee->id)->update([
+            'name' => $employee->name,
+            'email' => $employee->email,
+        ]);
+
+        return redirect()->route('employees.show', $employee->id)->with('success', 'Employee details updated successfully and User credentials synchronized.');
     }
 
     /**
@@ -151,7 +170,10 @@ class EmployeeController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
+        // Remove linked User login credentials
+        User::where('employee_id', $employee->id)->delete();
+
         $employee->delete();
-        return redirect()->route('employees.index')->with('success', 'Employee record removed successfully.');
+        return redirect()->route('employees.index')->with('success', 'Employee record and matching User credentials removed successfully.');
     }
 }
