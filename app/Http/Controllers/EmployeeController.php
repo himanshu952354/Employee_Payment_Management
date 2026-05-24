@@ -64,6 +64,7 @@ class EmployeeController extends Controller
             'bank_name' => 'nullable|string|max:255',
             'account_number' => 'nullable|string|max:255',
             'join_date' => 'required|date',
+            'password' => 'required|string|min:6',
         ]);
 
         // Generate unique employee ID e.g., EMP-1008
@@ -88,7 +89,7 @@ class EmployeeController extends Controller
         User::create([
             'name' => $employee->name,
             'email' => $employee->email,
-            'password' => 'password', // Default plain password, auto-hashed by model cast!
+            'password' => $request->password, // Custom password, auto-hashed by model cast!
             'role' => 'employee',
             'company_name' => $employee->company_name,
             'employee_id' => $employee->id,
@@ -148,15 +149,21 @@ class EmployeeController extends Controller
             'account_number' => 'nullable|string|max:255',
             'join_date' => 'required|date',
             'status' => 'required|string|in:Active,Inactive',
+            'password' => 'nullable|string|min:6',
         ]);
 
         $employee->update($request->all());
 
         // Synchronize linked User account details
-        User::where('employee_id', $employee->id)->update([
-            'name' => $employee->name,
-            'email' => $employee->email,
-        ]);
+        $user = User::where('employee_id', $employee->id)->first();
+        if ($user) {
+            $user->name = $employee->name;
+            $user->email = $employee->email;
+            if ($request->filled('password')) {
+                $user->password = $request->password;
+            }
+            $user->save();
+        }
 
         return redirect()->route('employees.show', $employee->id)->with('success', 'Employee details updated successfully and User credentials synchronized.');
     }

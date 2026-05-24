@@ -309,6 +309,13 @@
                     <input type="text" name="account_number" value="{{ $employee->account_number }}"
                         class="block w-full rounded-none border border-black bg-[#F4ECE6] py-3 px-3.5 text-black focus:ring-0 focus:border-black text-xs transition-all">
                 </div>
+
+                <!-- Reset Password -->
+                <div class="md:col-span-2">
+                    <label class="block text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Reset Login Password (Leave blank to keep current password)</label>
+                    <input type="password" name="password" placeholder="••••••••"
+                        class="block w-full rounded-none border border-black bg-[#F4ECE6] py-3 px-3.5 text-black focus:ring-0 focus:border-black text-xs transition-all">
+                </div>
             </div>
 
             <!-- Buttons -->
