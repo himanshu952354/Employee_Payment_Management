@@ -7,6 +7,7 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -56,6 +57,12 @@ class AuthController extends Controller
         $email = strtolower(trim($request->input('email')));
         $password = $request->input('password');
 
+        Log::info('Login attempt initiated', [
+            'role' => $role,
+            'email' => $email,
+            'company_name' => $request->input('company_name') ? trim($request->input('company_name')) : null,
+        ]);
+
         if ($role === 'admin') {
             // Verify role and credentials in a case-insensitive manner
             $user = User::whereRaw('LOWER(email) = ?', [$email])
@@ -63,6 +70,7 @@ class AuthController extends Controller
                 ->first();
 
             if (!$user) {
+                Log::warning('Admin login failed: Email not registered as admin', ['email' => $email]);
                 return back()->withErrors([
                     'email' => "This email is not registered as an Admin.",
                 ])->onlyInput('email');
@@ -76,12 +84,21 @@ class AuthController extends Controller
                 ->first();
 
             if (!$employee) {
+                Log::warning('Employee login failed: Not registered in company', [
+                    'email' => $email,
+                    'company_name' => $companyName,
+                ]);
                 return back()->withErrors([
                     'email' => "You are not registered in this company.",
                 ])->onlyInput('email');
             }
 
             if ($employee->status !== 'Active') {
+                Log::warning('Employee login failed: Account inactive', [
+                    'email' => $email,
+                    'company_name' => $companyName,
+                    'status' => $employee->status,
+                ]);
                 return back()->withErrors([
                     'email' => "Your account is currently inactive. Please contact your administrator.",
                 ])->onlyInput('email');
@@ -94,6 +111,11 @@ class AuthController extends Controller
                 ->first();
 
             if (!$user) {
+                Log::warning('Employee login failed: Employee directory record exists, but User credentials record not found', [
+                    'email' => $email,
+                    'company_name' => $companyName,
+                    'employee_id' => $employee->id,
+                ]);
                 return back()->withErrors([
                     'email' => "Employee credentials not found. Please contact your administrator.",
                 ])->onlyInput('email');
@@ -108,10 +130,22 @@ class AuthController extends Controller
                 $successMsg = Auth::user()->role === 'admin'
                     ? "Welcome back to your workspace command center, Admin!"
                     : "Welcome to your personal self-service portal, " . Auth::user()->name . "!";
+                
+                Log::info('Login successful', [
+                    'user_id' => $user->id,
+                    'role' => $user->role,
+                    'company_name' => $user->company_name,
+                ]);
                     
                 return redirect()->route('dashboard')->with('success', $successMsg);
             }
         }
+
+        Log::warning('Login failed: Password hash mismatch', [
+            'email' => $email,
+            'role' => $user->role,
+            'company_name' => $user->company_name,
+        ]);
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our database records.',
