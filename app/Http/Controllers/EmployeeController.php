@@ -183,4 +183,20 @@ class EmployeeController extends Controller
         $employee->delete();
         return redirect()->route('employees.index')->with('success', 'Employee record and matching User credentials removed successfully.');
     }
+
+    /**
+     * Toggle the status of the employee.
+     */
+    public function toggleStatus(Employee $employee)
+    {
+        if ($employee->company_name !== auth()->user()->company_name) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $newStatus = $employee->status === 'Active' ? 'Inactive' : 'Active';
+        $employee->status = $newStatus;
+        $employee->save();
+
+        return redirect()->back()->with('success', "Employee {$employee->name} status successfully changed to {$newStatus}.");
+    }
 }

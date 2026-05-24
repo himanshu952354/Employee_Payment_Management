@@ -179,4 +179,84 @@ class ExampleTest extends TestCase
         $empUser->refresh();
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newsecurepassword', $empUser->password));
     }
+
+    public function test_employee_status_toggling_and_restricted_login(): void
+    {
+        // 1. Create an Admin user representing the company
+        $admin = \App\Models\User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@company.com',
+            'password' => 'password',
+            'role' => 'admin',
+            'company_name' => 'Test Company',
+        ]);
+
+        $this->actingAs($admin);
+
+        // 2. Create an Employee in the directory
+        $employee = \App\Models\Employee::create([
+            'employee_id' => 'EMP-9005',
+            'name' => 'John Doe',
+            'email' => 'john@company.com',
+            'department' => 'Engineering',
+            'designation' => 'Software Engineer',
+            'salary' => 5000,
+            'join_date' => '2024-01-01',
+            'status' => 'Active',
+            'company_name' => 'Test Company',
+        ]);
+
+        $empUser = \App\Models\User::create([
+            'name' => 'John Doe',
+            'email' => 'john@company.com',
+            'password' => 'password',
+            'role' => 'employee',
+            'company_name' => 'Test Company',
+            'employee_id' => $employee->id,
+        ]);
+
+        // 3. Toggle Status to Inactive as Admin
+        $response1 = $this->patch(route('employees.toggle-status', $employee->id));
+        $response1->assertRedirect();
+        
+        $employee->refresh();
+        $this->assertEquals('Inactive', $employee->status);
+
+        // 4. Log out Admin
+        $this->post('/logout');
+
+        // 5. Attempt login as Inactive Employee
+        $response2 = $this->post('/login', [
+            'email' => 'john@company.com',
+            'password' => 'password',
+            'role' => 'employee',
+            'company_name' => 'Test Company',
+        ]);
+
+        $response2->assertSessionHasErrors(['email']);
+        $this->assertEquals(
+            'Your account is currently inactive. Please contact your administrator.',
+            session('errors')->first('email')
+        );
+
+        // 6. Log back in as Admin and Toggle back to Active
+        $this->actingAs($admin);
+        $response3 = $this->patch(route('employees.toggle-status', $employee->id));
+        $response3->assertRedirect();
+        
+        $employee->refresh();
+        $this->assertEquals('Active', $employee->status);
+
+        // 7. Log out Admin
+        $this->post('/logout');
+
+        // 8. Attempt login again as now Active Employee
+        $response4 = $this->post('/login', [
+            'email' => 'john@company.com',
+            'password' => 'password',
+            'role' => 'employee',
+            'company_name' => 'Test Company',
+        ]);
+        $response4->assertRedirect('/dashboard');
+    }
 }

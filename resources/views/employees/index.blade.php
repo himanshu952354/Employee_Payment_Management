@@ -74,7 +74,7 @@
                         <th class="py-3.5 px-4 font-bold text-black">Department</th>
                         <th class="py-3.5 px-4 font-bold text-black">Base Salary</th>
                         <th class="py-3.5 px-4 font-bold text-black">Join Date</th>
-                        <th class="py-3.5 px-4 font-bold text-black">Status</th>
+                        <th class="py-3.5 px-4 font-bold text-black" title="Click any employee status below to instantly toggle it">Status <i class="fa-solid fa-circle-info text-[9px] text-slate-450 ml-0.5"></i></th>
                         <th class="py-3.5 px-4 font-bold text-black text-right">Actions</th>
                     </tr>
                 </thead>
@@ -107,15 +107,21 @@
                                 {{ $emp->join_date ? $emp->join_date->format('M d, Y') : 'N/A' }}
                             </td>
                             <td class="py-4.5 px-4">
-                                @if($emp->status === 'Active')
-                                    <span class="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-250 px-2.5 py-0.5 rounded-none">
-                                        <span class="w-1.5 h-1.5 bg-emerald-500 border border-black inline-block"></span> Active
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-800 bg-slate-100 border border-black px-2.5 py-0.5 rounded-none">
-                                        <span class="w-1.5 h-1.5 bg-slate-400 border border-black inline-block"></span> Inactive
-                                    </span>
-                                @endif
+                                <form action="{{ route('employees.toggle-status', $emp->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    @if($emp->status === 'Active')
+                                        <button type="submit" title="Click to set Inactive"
+                                            class="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 px-2.5 py-0.5 rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[0.5px] active:translate-y-[0.5px] active:shadow-none transition-all cursor-pointer">
+                                            <span class="w-1.5 h-1.5 bg-emerald-500 border border-black inline-block"></span> Active
+                                        </button>
+                                    @else
+                                        <button type="submit" title="Click to set Active"
+                                            class="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-800 bg-slate-100 hover:bg-slate-200 border border-black px-2.5 py-0.5 rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[0.5px] active:translate-y-[0.5px] active:shadow-none transition-all cursor-pointer">
+                                            <span class="w-1.5 h-1.5 bg-slate-400 border border-black inline-block"></span> Inactive
+                                        </button>
+                                    @endif
+                                </form>
                             </td>
                             <td class="py-4.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-2">

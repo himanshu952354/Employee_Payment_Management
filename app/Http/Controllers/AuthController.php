@@ -71,13 +71,19 @@ class AuthController extends Controller
             $companyName = $request->input('company_name');
 
             // 1. Strict Tenant validation in employee directory
-            $employeeExists = Employee::where('email', $email)
+            $employee = Employee::where('email', $email)
                 ->where('company_name', $companyName)
-                ->exists();
+                ->first();
 
-            if (!$employeeExists) {
+            if (!$employee) {
                 return back()->withErrors([
                     'email' => "You are not registered in this company.",
+                ])->onlyInput('email');
+            }
+
+            if ($employee->status !== 'Active') {
+                return back()->withErrors([
+                    'email' => "Your account is currently inactive. Please contact your administrator.",
                 ])->onlyInput('email');
             }
 

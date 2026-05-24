@@ -28,6 +28,7 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
     Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
     Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+    Route::patch('/employees/{employee}/status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
 
     // Daily Attendance Sheet (Admin only)
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
