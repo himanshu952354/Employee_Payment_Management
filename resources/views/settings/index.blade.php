@@ -66,8 +66,6 @@
                         </div>
                     </div>
 
-                    </div>
-
                     <!-- PAYMENT GATEWAYS CONFIGURATION BLOCK -->
                     <div class="border-b-2 border-black pb-4 pt-6">
                         <h4 class="text-xs font-black uppercase tracking-wider text-black flex items-center gap-2">
