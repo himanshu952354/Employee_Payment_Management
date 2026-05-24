@@ -66,53 +66,55 @@
                         </div>
                     </div>
 
-                    <!-- PAYMENT GATEWAYS CONFIGURATION BLOCK -->
+                    <div class="space-y-2 pt-2">
+                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">Workspace Departments (Comma-separated)</label>
+                        <input type="text" name="departments" value="{{ old('departments', $deptsString) }}" required
+                            class="w-full bg-[#F4ECE6] border border-black px-4 py-3 text-xs font-bold text-black shadow-[2.5px_2.5px_0px_0px_#000] focus:shadow-[4px_4px_0px_0px_#000] transition-all outline-none"
+                            placeholder="Engineering, Marketing, HR, Finance, Sales">
+                    </div>
+
+                    <!-- ADMIN DISBURSING ACCOUNTS CONFIGURATION BLOCK -->
                     <div class="border-b-2 border-black pb-4 pt-6">
                         <h4 class="text-xs font-black uppercase tracking-wider text-black flex items-center gap-2">
-                            <i class="fa-solid fa-credit-card text-emerald-600"></i> Payment Gateway Integrations
+                            <i class="fa-solid fa-credit-card text-emerald-600"></i> Admin Disbursing Account Details
                         </h4>
-                        <p class="text-[9px] text-slate-500 font-semibold mt-1">Configure your own Stripe and PayPal keys to clear salary payments. Leave blank to use server defaults.</p>
+                        <p class="text-[9px] text-slate-500 font-semibold mt-1">Configure your own debit/credit card and PayPal email to clear and disburse employee salary payments.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                    <!-- Stripe Card Details -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-2">
                         <div class="space-y-2">
-                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">Stripe Publishable Key</label>
+                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">Default Payment Card Number</label>
                             <input type="text" name="stripe_key" value="{{ old('stripe_key', $user->stripe_key) }}"
                                 class="w-full bg-[#F4ECE6] border border-black px-4 py-3 text-xs font-bold text-black shadow-[2.5px_2.5px_0px_0px_#000] focus:shadow-[4px_4px_0px_0px_#000] transition-all outline-none"
-                                placeholder="pk_test_...">
+                                placeholder="4242 4242 4242 4242">
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">Stripe Secret Key</label>
-                            <input type="password" name="stripe_secret" value="{{ old('stripe_secret', $user->stripe_secret) }}"
+                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">Card Expiry (MM/YY)</label>
+                            <input type="text" name="stripe_secret" value="{{ old('stripe_secret', $user->stripe_secret) }}"
                                 class="w-full bg-[#F4ECE6] border border-black px-4 py-3 text-xs font-bold text-black shadow-[2.5px_2.5px_0px_0px_#000] focus:shadow-[4px_4px_0px_0px_#000] transition-all outline-none"
-                                placeholder="sk_test_••••••••">
+                                placeholder="MM/YY">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">Card Security CVC</label>
+                            <input type="password" name="paypal_client_id" value="{{ old('paypal_client_id', $user->paypal_client_id) }}"
+                                class="w-full bg-[#F4ECE6] border border-black px-4 py-3 text-xs font-bold text-black shadow-[2.5px_2.5px_0px_0px_#000] focus:shadow-[4px_4px_0px_0px_#000] transition-all outline-none"
+                                placeholder="•••" maxlength="4">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        <div class="space-y-2 sm:col-span-1">
-                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">PayPal Mode</label>
-                            <select name="paypal_mode"
-                                class="w-full bg-[#F4ECE6] border border-black px-4 py-3 text-xs font-bold text-black shadow-[2.5px_2.5px_0px_0px_#000] focus:shadow-[4px_4px_0px_0px_#000] transition-all outline-none">
-                                <option value="sandbox" {{ old('paypal_mode', $user->paypal_mode ?? 'sandbox') === 'sandbox' ? 'selected' : '' }}>Sandbox</option>
-                                <option value="live" {{ old('paypal_mode', $user->paypal_mode) === 'live' ? 'selected' : '' }}>Live</option>
-                            </select>
+                    <!-- PayPal Details -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">Default Disbursing PayPal Email</label>
+                            <input type="email" name="paypal_client_secret" value="{{ old('paypal_client_secret', $user->paypal_client_secret) }}"
+                                class="w-full bg-[#F4ECE6] border border-black px-4 py-3 text-xs font-bold text-black shadow-[2.5px_2.5px_0px_0px_#000] focus:shadow-[4px_4px_0px_0px_#000] transition-all outline-none"
+                                placeholder="admin@company.com">
                         </div>
 
-                        <div class="space-y-2 sm:col-span-1">
-                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">PayPal Client ID</label>
-                            <input type="text" name="paypal_client_id" value="{{ old('paypal_client_id', $user->paypal_client_id) }}"
-                                class="w-full bg-[#F4ECE6] border border-black px-4 py-3 text-xs font-bold text-black shadow-[2.5px_2.5px_0px_0px_#000] focus:shadow-[4px_4px_0px_0px_#000] transition-all outline-none"
-                                placeholder="Client ID">
-                        </div>
-
-                        <div class="space-y-2 sm:col-span-1">
-                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-700 block">PayPal Client Secret</label>
-                            <input type="password" name="paypal_client_secret" value="{{ old('paypal_client_secret', $user->paypal_client_secret) }}"
-                                class="w-full bg-[#F4ECE6] border border-black px-4 py-3 text-xs font-bold text-black shadow-[2.5px_2.5px_0px_0px_#000] focus:shadow-[4px_4px_0px_0px_#000] transition-all outline-none"
-                                placeholder="Client Secret">
-                        </div>
+                        <input type="hidden" name="paypal_mode" value="sandbox">
                     </div>
 
                 @endif

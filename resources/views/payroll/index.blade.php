@@ -351,7 +351,7 @@
                             <div class="col-span-2">
                                 <label class="block text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">Corporate Card Number</label>
                                 <div class="relative">
-                                    <input type="text" id="stripe-card-number" placeholder="4242 4242 4242 4242"
+                                    <input type="text" id="stripe-card-number" placeholder="4242 4242 4242 4242" value="{{ auth()->user()->stripe_key }}"
                                         class="block w-full rounded-none border border-black bg-[#F4ECE6] py-2 px-3 text-black focus:ring-0 focus:border-black text-xs font-bold font-mono transition-all">
                                     <div class="absolute right-3 top-2.5 text-xs text-slate-400">
                                         <i class="fa-solid fa-lock"></i>
@@ -360,12 +360,12 @@
                             </div>
                             <div>
                                 <label class="block text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">Expiry Date</label>
-                                <input type="text" id="stripe-card-expiry" placeholder="MM/YY" maxlength="5"
+                                <input type="text" id="stripe-card-expiry" placeholder="MM/YY" maxlength="5" value="{{ auth()->user()->stripe_secret }}"
                                     class="block w-full rounded-none border border-black bg-[#F4ECE6] py-2 px-3 text-black focus:ring-0 focus:border-black text-xs font-bold text-center transition-all">
                             </div>
                             <div>
                                 <label class="block text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">Secure CVC</label>
-                                <input type="password" id="stripe-card-cvc" placeholder="•••" maxlength="4"
+                                <input type="password" id="stripe-card-cvc" placeholder="•••" maxlength="4" value="{{ auth()->user()->paypal_client_id }}"
                                     class="block w-full rounded-none border border-black bg-[#F4ECE6] py-2 px-3 text-black focus:ring-0 focus:border-black text-xs font-bold text-center transition-all">
                             </div>
                         </div>
@@ -378,6 +378,9 @@
                                 <i class="fa-brands fa-paypal"></i>
                             </div>
                             <h4 class="text-xs font-black uppercase tracking-wider text-black">PayPal Corporate Payout Desk</h4>
+                            @if(auth()->user()->paypal_client_secret)
+                                <p class="text-[8px] text-amber-700 font-extrabold uppercase tracking-wider">Disbursing Account: {{ auth()->user()->paypal_client_secret }}</p>
+                            @endif
                             <p class="text-[9px] text-slate-500 max-w-xs font-bold leading-normal uppercase">
                                 Click the yellow PayPal Smart button to initiate simulated authorization popup and synchronize ledger balances.
                             </p>
@@ -588,6 +591,12 @@
 
         // Reset Gateway selection back to Stripe
         selectGateway('Stripe');
+
+        // Prefill Card Preview from inputs
+        const cardNum = document.getElementById('stripe-card-number').value || '••••  ••••  ••••  ••••';
+        const cardExp = document.getElementById('stripe-card-expiry').value || '12/30';
+        document.getElementById('preview-card-number').innerText = cardNum;
+        document.getElementById('preview-card-expiry').innerText = cardExp;
         
         // Reset screens
         document.getElementById('pay-success-screen').classList.add('hidden');
