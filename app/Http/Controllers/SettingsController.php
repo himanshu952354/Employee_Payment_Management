@@ -103,7 +103,7 @@ class SettingsController extends Controller
             $user->departments = array_values($deptsArray);
 
             if ($request->filled('password')) {
-                $user->password = Hash::make($request->input('password'));
+                $user->password = $request->input('password');
             }
             $user->save();
 
@@ -136,7 +136,7 @@ class SettingsController extends Controller
             // 1. Update SQLite Employee User
             $user->name = $request->input('name');
             if ($request->filled('password')) {
-                $user->password = Hash::make($request->input('password'));
+                $user->password = $request->input('password');
             }
             $user->save();
 

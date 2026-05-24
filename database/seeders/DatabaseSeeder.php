@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Himanshu Shekhar',
             'email' => 'admin@payflow.com',
-            'password' => Hash::make('password'),
+            'password' => 'password',
             'role' => 'admin',
             'company_name' => 'PayFlow Enterprise',
         ]);
@@ -133,7 +133,7 @@ class DatabaseSeeder extends Seeder
             User::create([
                 'name' => $employee->name,
                 'email' => $employee->email,
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => 'employee',
                 'company_name' => 'PayFlow Enterprise',
                 'employee_id' => $employee->id,

@@ -110,7 +110,7 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
-                'password' => Hash::make($request->input('password')),
+                'password' => $request->input('password'),
                 'role' => 'admin',
                 'company_name' => $request->input('company_name'),
                 'departments' => array_values($deptsArray),
@@ -141,7 +141,7 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
-                'password' => Hash::make($request->input('password')),
+                'password' => $request->input('password'),
                 'role' => 'employee',
                 'company_name' => $employee->company_name,
                 'employee_id' => $employee->id,
