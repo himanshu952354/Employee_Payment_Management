@@ -54,12 +54,3 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
 });
-
-Route::get('/debug-db-status-secret', function() {
-    return response()->json([
-        'users' => \App\Models\User::select('id', 'name', 'email', 'role', 'company_name', 'employee_id')->get(),
-        'employees' => \App\Models\Employee::select('id', 'employee_id', 'name', 'email', 'status', 'company_name')->get(),
-        'connection' => config('database.default'),
-        'sqlite_file_exists' => file_exists(database_path('database.sqlite')),
-    ]);
-});

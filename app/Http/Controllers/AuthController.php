@@ -148,7 +148,7 @@ class AuthController extends Controller
         ]);
 
         return back()->withErrors([
-            'email' => 'Debug Info: Found matching ' . $user->role . ' user record! But password check failed. Database hash: "' . $user->password . '", Input password you typed: "' . $password . '"',
+            'email' => 'The provided credentials do not match our database records.',
         ])->onlyInput('email');
     }
 

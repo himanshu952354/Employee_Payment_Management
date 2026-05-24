@@ -202,7 +202,7 @@
                 <!-- Login Password -->
                 <div>
                     <label class="block text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Login Password</label>
-                    <input type="password" name="password" required value="password"
+                    <input type="password" name="password" required placeholder="Min 6 characters"
                         class="block w-full rounded-none border border-black bg-[#F4ECE6] py-3 px-3.5 text-black focus:ring-0 focus:border-black text-xs transition-all">
                 </div>
 
