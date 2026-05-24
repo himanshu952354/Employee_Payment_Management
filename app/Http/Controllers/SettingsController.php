@@ -115,7 +115,7 @@ class SettingsController extends Controller
             $user->paypal_mode = $request->input('paypal_mode', 'sandbox');
 
             if ($request->filled('password')) {
-                $user->password = $request->input('password');
+                $user->password = bcrypt($request->input('password'));
             }
             $user->save();
 
@@ -148,7 +148,7 @@ class SettingsController extends Controller
             // 1. Update SQLite Employee User
             $user->name = $request->input('name');
             if ($request->filled('password')) {
-                $user->password = $request->input('password');
+                $user->password = bcrypt($request->input('password'));
             }
             $user->save();
 

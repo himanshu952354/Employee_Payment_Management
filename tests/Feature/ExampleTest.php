@@ -24,7 +24,7 @@ class ExampleTest extends TestCase
         $admin = \App\Models\User::create([
             'name' => 'Admin User',
             'email' => 'admin@company.com',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => 'admin',
             'company_name' => 'Test Company',
         ]);
@@ -46,7 +46,7 @@ class ExampleTest extends TestCase
         $empUser = \App\Models\User::create([
             'name' => 'John Doe',
             'email' => 'john@company.com',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => 'employee',
             'company_name' => 'Test Company',
             'employee_id' => $employee->id,
@@ -92,7 +92,7 @@ class ExampleTest extends TestCase
         $admin = \App\Models\User::create([
             'name' => 'Admin User',
             'email' => 'admin@company.com',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => 'admin',
             'company_name' => 'Test Company',
         ]);
@@ -127,7 +127,7 @@ class ExampleTest extends TestCase
         $admin = \App\Models\User::create([
             'name' => 'Admin User',
             'email' => 'admin@company.com',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => 'admin',
             'company_name' => 'Test Company',
         ]);
@@ -149,7 +149,7 @@ class ExampleTest extends TestCase
         $empUser = \App\Models\User::create([
             'name' => 'John Doe',
             'email' => 'john@company.com',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => 'employee',
             'company_name' => 'Test Company',
             'employee_id' => $employee->id,
@@ -196,7 +196,7 @@ class ExampleTest extends TestCase
         $admin = \App\Models\User::create([
             'name' => 'Admin User',
             'email' => 'admin@company.com',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => 'admin',
             'company_name' => 'Test Company',
         ]);
@@ -219,7 +219,7 @@ class ExampleTest extends TestCase
         $empUser = \App\Models\User::create([
             'name' => 'John Doe',
             'email' => 'john@company.com',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => 'employee',
             'company_name' => 'Test Company',
             'employee_id' => $employee->id,

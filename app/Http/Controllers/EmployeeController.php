@@ -94,7 +94,7 @@ class EmployeeController extends Controller
         User::create([
             'name' => $employee->name,
             'email' => $employee->email,
-            'password' => $request->password, // Custom password, auto-hashed by model cast!
+            'password' => bcrypt($request->password),
             'role' => 'employee',
             'company_name' => $employee->company_name,
             'employee_id' => $employee->id,
@@ -170,7 +170,7 @@ class EmployeeController extends Controller
             $user->name = $employee->name;
             $user->email = $employee->email;
             if ($request->filled('password')) {
-                $user->password = $request->password;
+                $user->password = bcrypt($request->password);
             }
             $user->save();
         }
