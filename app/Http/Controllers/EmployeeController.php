@@ -54,6 +54,11 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'email' => strtolower(trim($request->input('email'))),
+            'name' => trim($request->input('name')),
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:employees,email|unique:users,email',
@@ -135,6 +140,11 @@ class EmployeeController extends Controller
         if ($employee->company_name !== auth()->user()->company_name) {
             abort(403, 'Unauthorized access.');
         }
+
+        $request->merge([
+            'email' => strtolower(trim($request->input('email'))),
+            'name' => trim($request->input('name')),
+        ]);
 
         $userId = User::where('employee_id', $employee->id)->value('id');
 

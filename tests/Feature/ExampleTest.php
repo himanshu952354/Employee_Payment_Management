@@ -74,6 +74,16 @@ class ExampleTest extends TestCase
         ]);
         $response2->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($empUser);
+
+        // 6. Attempt login with uppercase email to verify case-insensitivity
+        $this->post('/logout');
+        $response3 = $this->post('/login', [
+            'email' => 'JOHN@COMPANY.COM',
+            'password' => 'password',
+            'role' => 'employee',
+            'company_name' => 'Test Company',
+        ]);
+        $response3->assertRedirect('/dashboard');
     }
 
     public function test_employee_creation_with_custom_password(): void

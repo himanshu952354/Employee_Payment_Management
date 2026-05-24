@@ -53,7 +53,7 @@ class AuthController extends Controller
 
         $request->validate($rules);
 
-        $email = $request->input('email');
+        $email = strtolower(trim($request->input('email')));
         $password = $request->input('password');
 
         if ($role === 'admin') {
@@ -68,7 +68,7 @@ class AuthController extends Controller
                 ])->onlyInput('email');
             }
         } else {
-            $companyName = $request->input('company_name');
+            $companyName = trim($request->input('company_name'));
 
             // 1. Strict Tenant validation in employee directory
             $employee = Employee::where('email', $email)
@@ -141,6 +141,11 @@ class AuthController extends Controller
             'departments' => ['required', 'string'],
             'currency' => ['required', 'string', 'max:10'],
         ];
+
+        $request->merge([
+            'email' => strtolower(trim($request->input('email'))),
+            'company_name' => trim($request->input('company_name')),
+        ]);
 
         $request->validate($rules);
 
