@@ -84,6 +84,16 @@ class ExampleTest extends TestCase
             'company_name' => 'Test Company',
         ]);
         $response3->assertRedirect('/dashboard');
+
+        // 7. Attempt login with mixed-case company name to verify case-insensitivity
+        $this->post('/logout');
+        $response4 = $this->post('/login', [
+            'email' => 'john@company.com',
+            'password' => 'password',
+            'role' => 'employee',
+            'company_name' => 'tEsT cOmPaNy',
+        ]);
+        $response4->assertRedirect('/dashboard');
     }
 
     public function test_employee_creation_with_custom_password(): void

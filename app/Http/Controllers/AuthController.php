@@ -57,8 +57,8 @@ class AuthController extends Controller
         $password = $request->input('password');
 
         if ($role === 'admin') {
-            // Verify role and credentials in SQLite directly
-            $user = User::where('email', $email)
+            // Verify role and credentials in a case-insensitive manner
+            $user = User::whereRaw('LOWER(email) = ?', [$email])
                 ->where('role', 'admin')
                 ->first();
 
@@ -70,9 +70,9 @@ class AuthController extends Controller
         } else {
             $companyName = trim($request->input('company_name'));
 
-            // 1. Strict Tenant validation in employee directory
-            $employee = Employee::where('email', $email)
-                ->where('company_name', $companyName)
+            // 1. Strict Tenant validation in employee directory (case-insensitive email and company name)
+            $employee = Employee::whereRaw('LOWER(email) = ?', [$email])
+                ->whereRaw('LOWER(company_name) = ?', [strtolower($companyName)])
                 ->first();
 
             if (!$employee) {
@@ -87,10 +87,10 @@ class AuthController extends Controller
                 ])->onlyInput('email');
             }
 
-            // 2. Retrieve corresponding User credentials
-            $user = User::where('email', $email)
+            // 2. Retrieve corresponding User credentials (case-insensitive email and company name)
+            $user = User::whereRaw('LOWER(email) = ?', [$email])
                 ->where('role', 'employee')
-                ->where('company_name', $companyName)
+                ->whereRaw('LOWER(company_name) = ?', [strtolower($companyName)])
                 ->first();
 
             if (!$user) {
